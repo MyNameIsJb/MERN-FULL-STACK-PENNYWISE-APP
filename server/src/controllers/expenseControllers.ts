@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Expense, ExpenseCategory } from "../types";
+import { ApiResponse, Expense, ExpenseCategory } from "../types";
 
 let fakeExpenses: Expense[] = [
   {
@@ -25,7 +25,7 @@ let fakeExpenses: Expense[] = [
 ];
 
 export const getAllExpenses = (req: Request, res: Response) => {
-  const response = {
+  const response: ApiResponse<Expense[]> = {
     success: true,
     data: fakeExpenses,
     message: "Expenses retrieved successfully",
@@ -40,7 +40,7 @@ export const getExpenseById = (req: Request, res: Response) => {
   const expense = fakeExpenses.find((exp) => exp.id === id);
 
   if (!expense) {
-    const response = {
+    const response: ApiResponse<null> = {
       success: false,
       error: "Expense Not Found",
     };
@@ -48,7 +48,7 @@ export const getExpenseById = (req: Request, res: Response) => {
     return res.status(404).json(response);
   }
 
-  const response = {
+  const response: ApiResponse<Expense> = {
     success: true,
     data: expense,
   };
@@ -60,7 +60,7 @@ export const createExpense = (req: Request, res: Response) => {
   const { amount, category, description, date } = req.body;
 
   if (!amount || !category || !description) {
-    const response = {
+    const response: ApiResponse<null> = {
       success: false,
       error: "Please provide amount, category and description",
     };
@@ -81,7 +81,7 @@ export const createExpense = (req: Request, res: Response) => {
 
   fakeExpenses.push(newExpense);
 
-  const response = {
+  const response: ApiResponse<Expense> = {
     success: true,
     data: newExpense,
     message: "Expense created successfully",
@@ -98,7 +98,7 @@ export const updateExpense = (req: Request, res: Response) => {
   const expenseId = fakeExpenses.findIndex((expense) => expense.id === id);
 
   if (expenseId === -1) {
-    const response = {
+    const response: ApiResponse<null> = {
       success: false,
       error: "Expense not found",
     };
@@ -116,8 +116,8 @@ export const updateExpense = (req: Request, res: Response) => {
     updatedAt: new Date(),
   };
 
-  const response = {
-    status: true,
+  const response: ApiResponse<Expense> = {
+    success: true,
     data: fakeExpenses[expenseId],
     message: "Expense updated successfully",
   };
@@ -131,7 +131,7 @@ export const deleteExpense = (req: Request, res: Response) => {
   const expenseId = fakeExpenses.findIndex((expense) => expense.id === id);
 
   if (expenseId === -1) {
-    const response = {
+    const response: ApiResponse<null> = {
       success: false,
       error: "Expense not found",
     };
@@ -141,7 +141,7 @@ export const deleteExpense = (req: Request, res: Response) => {
 
   fakeExpenses.splice(expenseId, 1);
 
-  const response = {
+  const response: ApiResponse<null> = {
     success: true,
     message: "Expense deleted successfully",
   };
