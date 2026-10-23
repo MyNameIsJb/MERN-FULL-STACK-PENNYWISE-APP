@@ -1,5 +1,6 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application } from "express";
 import expenseRoutes from "./routes/expenseRoutes";
+import authRoutes from "./routes/authRoutes";
 
 const app: Application = express();
 const PORT = 8000;
@@ -13,6 +14,9 @@ app.get("/", (req, res) => {
 
 // Expense Routes
 app.use("/api/expenses", expenseRoutes);
+
+// Auth Routes
+app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
