@@ -40,3 +40,9 @@ export interface AuthResponse {
   user: Omit<User, "password">;
   token?: string;
 }
+
+export interface MonthlyTotals {
+  month: string;
+  total: number;
+  count: number;
+}

@@ -3,7 +3,7 @@ import { ApiResponse, Expense, ExpenseCategory } from "../types";
 import { asyncHandler, sendSuccess } from "../utils/responseHelpers";
 import { AppError } from "../middleware/errorHandler";
 
-let fakeExpenses: Expense[] = [
+export let fakeExpenses: Expense[] = [
   {
     id: "1",
     userId: "user123",

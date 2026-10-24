@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import expenseRoutes from "./routes/expenseRoutes";
 import authRoutes from "./routes/authRoutes";
 import profileRoutes from "./routes/profileRoutes";
+import analyticsRoutes from "./routes/analyticsRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app: Application = express();
@@ -22,6 +23,9 @@ app.use("/api/auth", authRoutes);
 
 // Profile Routes
 app.use("/api/profile", profileRoutes);
+
+// Analytics Routes
+app.use("/api/analytics", analyticsRoutes);
 
 app.use((req, res) => {
   res.status(400).json({
