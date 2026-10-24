@@ -162,7 +162,7 @@ export const updateExpense = asyncHandler(
       ...fakeExpenses[expenseIndex],
       amount: amount || fakeExpenses[expenseIndex].amount,
       category: category || fakeExpenses[expenseIndex].category,
-      description: description.trim() || fakeExpenses[expenseIndex].description,
+      description: description || fakeExpenses[expenseIndex].description,
       date: date ? new Date(date) : fakeExpenses[expenseIndex].date,
 
       updatedAt: new Date(),
