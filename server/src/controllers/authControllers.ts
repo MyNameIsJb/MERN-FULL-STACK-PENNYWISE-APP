@@ -30,6 +30,35 @@ export const signup = asyncHandler(
       throw new AppError("Please provide name, email, and password", 400);
     }
 
+    if (name && name.trim().length < 2) {
+      throw new AppError("Name must be at least 2 characters.", 400);
+    }
+
+    if (name && name.trim().length > 50) {
+      throw new AppError("Name cannot exceed 50 characters.", 400);
+    }
+
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new AppError("Invalid email format", 400);
+      }
+    }
+
+    if (password) {
+      if (password.length < 8) {
+        throw new AppError("Password must be at least 8 characters.", 400);
+      }
+
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/;
+      if (!passwordRegex.test(password)) {
+        throw new AppError(
+          "Password must contain uppercase, lowercase, number, and special character (@$!%*?&)",
+          400,
+        );
+      }
+    }
+
     const existingUser = fakeUsers.find((user) => user.email === email);
 
     if (existingUser) {
@@ -38,8 +67,8 @@ export const signup = asyncHandler(
 
     const newUser: User = {
       id: crypto.randomUUID(),
-      name,
-      email,
+      name: name.trim(),
+      email: email.toLowerCase(),
       password,
       createdAt: new Date(),
       updatedAt: new Date(),

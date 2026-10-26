@@ -4,9 +4,12 @@ import authRoutes from "./routes/authRoutes";
 import profileRoutes from "./routes/profileRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
 import { errorHandler } from "./middleware/errorHandler";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app: Application = express();
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
@@ -37,5 +40,9 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`✅ Server is running at http://localhost:${PORT}`);
+  console.log(
+    `📋 Port loaded from: ${process.env.PORT ? ".env file" : "default (8000)"}`,
+  );
+  console.log(`🔍 Environment: ${process.env.NODE_ENV || "development"}`);
 });

@@ -30,7 +30,7 @@ export const updateProfile = asyncHandler(
     }
 
     if (name && name.trim().length < 2) {
-      throw new AppError("Name must be at least 2 characters long.", 400);
+      throw new AppError("Name must be at least 2 characters.", 400);
     }
 
     if (email) {
