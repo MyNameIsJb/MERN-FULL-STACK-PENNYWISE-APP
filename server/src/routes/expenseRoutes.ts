@@ -6,13 +6,14 @@ import {
   getExpenseById,
   updateExpense,
 } from "../controllers/expenseControllers";
+import { requireAuth } from "../middleware/authMiddleware";
 
 const router = Router();
 
-router.get("/", getAllExpenses);
-router.get("/:id", getExpenseById);
-router.post("/", createExpense);
-router.put("/:id", updateExpense);
-router.delete("/:id", deleteExpense);
+router.get("/", requireAuth, getAllExpenses);
+router.get("/:id", requireAuth, getExpenseById);
+router.post("/", requireAuth, createExpense);
+router.put("/:id", requireAuth, updateExpense);
+router.delete("/:id", requireAuth, deleteExpense);
 
 export default router;

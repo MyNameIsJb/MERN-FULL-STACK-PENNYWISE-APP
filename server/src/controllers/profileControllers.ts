@@ -72,6 +72,7 @@ export const updateProfile = asyncHandler(
       ...fakeUsers[userIndex],
       name: name || fakeUsers[userIndex].name,
       email: email || fakeUsers[userIndex].email,
+      password: password || fakeUsers[userIndex].password,
       updatedAt: new Date(),
     };
 

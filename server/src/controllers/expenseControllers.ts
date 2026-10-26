@@ -208,15 +208,55 @@ export let fakeExpenses: Expense[] = [
 
 export const getAllExpenses = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    sendSuccess(res, fakeExpenses, "Expenses retrieved successfully");
+    const userId = req.userId;
+
+    const userExpenses = fakeExpenses.filter(
+      (expense) => expense.userId === userId,
+    );
+
+    const { category, sort } = req.query;
+
+    let copiedExpenses = [...userExpenses];
+
+    if (category && typeof category === "string") {
+      copiedExpenses = copiedExpenses.filter(
+        (exp) => exp.category === category,
+      );
+    }
+
+    if (sort && typeof sort === "string") {
+      if (sort === "amount") {
+        copiedExpenses.sort((a, b) => a.amount - b.amount);
+      } else if (sort === "-amount") {
+        copiedExpenses.sort((a, b) => b.amount - a.amount);
+      } else if (sort === "date") {
+        copiedExpenses.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        );
+      } else if (sort === "-date") {
+        copiedExpenses.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        );
+      }
+    }
+
+    sendSuccess(
+      res,
+      copiedExpenses,
+      `Found ${copiedExpenses.length} expenses.`,
+    );
   },
 );
 
 export const getExpenseById = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+
     const { id } = req.params;
 
-    const expense = fakeExpenses.find((exp) => exp.id === id);
+    const expense = fakeExpenses.find(
+      (expense) => expense.id === id && expense.userId === userId,
+    );
 
     if (!expense) {
       throw new AppError("Expense Not Found", 404);
@@ -228,6 +268,8 @@ export const getExpenseById = asyncHandler(
 
 export const createExpense = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+
     const { amount, category, description, date } = req.body;
 
     if (!amount) {
@@ -276,7 +318,7 @@ export const createExpense = asyncHandler(
 
     const newExpense: Expense = {
       id: crypto.randomUUID(),
-      userId: "user123",
+      userId: userId,
       amount,
       category,
       description: description.trim(),
@@ -293,11 +335,15 @@ export const createExpense = asyncHandler(
 
 export const updateExpense = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+
     const { id } = req.params;
 
     const { amount, category, description, date } = req.body;
 
-    const expenseIndex = fakeExpenses.findIndex((expense) => expense.id === id);
+    const expenseIndex = fakeExpenses.findIndex(
+      (expense) => expense.id === id && expense.userId === userId,
+    );
 
     if (expenseIndex === -1) {
       throw new AppError("Expense not found", 404);
@@ -358,9 +404,13 @@ export const updateExpense = asyncHandler(
 
 export const deleteExpense = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+
     const { id } = req.params;
 
-    const expenseIndex = fakeExpenses.findIndex((expense) => expense.id === id);
+    const expenseIndex = fakeExpenses.findIndex(
+      (expense) => expense.id === id && expense.userId === userId,
+    );
 
     if (expenseIndex === -1) {
       throw new AppError("Expense not found", 404);
