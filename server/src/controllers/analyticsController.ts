@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { asyncHandler, sendSuccess } from "../utils/responseHelpers";
 import { AppError } from "../middleware/errorHandler";
 import { fakeExpenses } from "./expenseControllers";
-import { ExpenseCategory, MonthlyTotals } from "../types";
+import { DashboardStats, ExpenseCategory, MonthlyTotals } from "../types";
 
 export const getExpensesByCategories = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -124,5 +124,100 @@ export const getMonthlyTotals = asyncHandler(
       monthlyArray,
       `Monthly totals for year ${year} retrieved.`,
     );
+  },
+);
+
+const getCurrentMonth = (): string => {
+  return getMonthString(new Date());
+};
+
+const getLastMonth = (): string => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - 1);
+
+  return getMonthString(date);
+};
+
+export const getDashboardStats = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = "user123";
+
+    if (!userId) {
+      throw new AppError("User not authenticated. Please login.", 401);
+    }
+
+    const userExpenses = fakeExpenses.filter((exp) => exp.userId === userId);
+
+    if (userExpenses.length === 0) {
+      sendSuccess(
+        res,
+        [],
+        "No expenses found. Create an expense to get started.",
+      );
+      return;
+    }
+
+    const totalExpenses = userExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0,
+    );
+
+    const averageExpense = totalExpenses / userExpenses.length;
+    const roundedAverageExpenseAmount = Math.round(averageExpense * 10) / 10;
+
+    const amounts = userExpenses.map((exp) => exp.amount);
+    const maxAmount = Math.max(...amounts);
+    const minAmount = Math.min(...amounts);
+
+    const highestExpense = userExpenses.find(
+      (exp) => exp.amount === maxAmount,
+    )!;
+    const lowestExpense = userExpenses.find((exp) => exp.amount === minAmount)!;
+
+    const currentMonth = getCurrentMonth();
+    const currentMonthExpenses = userExpenses.filter(
+      (exp) => getMonthString(new Date(exp.date)) === currentMonth,
+    );
+    const currentMonthTotal = currentMonthExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0,
+    );
+
+    const lastMonth = getLastMonth();
+    const lastMonthExpenses = userExpenses.filter(
+      (exp) => getMonthString(new Date(exp.date)) === lastMonth,
+    );
+    const lastMonthTotal = lastMonthExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0,
+    );
+
+    let monthlyChange = 0;
+
+    // lastMonthTotal = 400
+    // currentMonthTotal = 500
+    // 500 - 400 = 100
+    // ((thisMonth - lastMonth) / (lastMonth)) * 100
+    //  100 / 400 = 0.25 * 100 = 25%
+    if (lastMonthTotal > 0) {
+      monthlyChange =
+        ((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
+      monthlyChange = Math.round(monthlyChange * 10) / 10;
+    } else if (currentMonthTotal > 0) {
+      monthlyChange = 100;
+    }
+
+    const stats: DashboardStats = {
+      totalExpenses: Math.round(totalExpenses * 100) / 100,
+      expenseCount: userExpenses.length,
+      roundedAverageExpenseAmount,
+      highestExpense,
+      lowestExpense,
+      currentMonthTotal: Math.round(currentMonthTotal * 100) / 100,
+      lastMonthTotal: Math.round(lastMonthTotal * 100) / 100,
+      monthlyChange,
+    };
+
+    sendSuccess(res, stats, "Dashboard statistics retrieved.");
   },
 );

@@ -46,3 +46,14 @@ export interface MonthlyTotals {
   total: number;
   count: number;
 }
+
+export interface DashboardStats {
+  totalExpenses: number;
+  expenseCount: number;
+  roundedAverageExpenseAmount: number;
+  highestExpense: Expense;
+  lowestExpense: Expense;
+  currentMonthTotal: number;
+  lastMonthTotal: number;
+  monthlyChange: number;
+}
