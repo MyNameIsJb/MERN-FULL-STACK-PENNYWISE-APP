@@ -4,18 +4,37 @@ import { AppError } from "../middleware/errorHandler";
 import { fakeExpenses } from "./expenseControllers";
 import { DashboardStats, ExpenseCategory, MonthlyTotals } from "../types";
 
+const getMonthString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${month}-${year}`;
+};
+
+const getCurrentMonth = (): string => {
+  return getMonthString(new Date());
+};
+
+const getLastMonth = (): string => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - 1);
+
+  return getMonthString(date);
+};
+
 export const getExpensesByCategories = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = "user123";
-
-    if (!userId) {
-      throw new AppError("User not authenticated. Please login.", 401);
-    }
+    const userId = req.userId;
 
     const userExpenses = fakeExpenses.filter((exp) => exp.userId === userId);
 
     if (userExpenses.length === 0) {
-      throw new AppError("No expenses found for this user.", 404);
+      sendSuccess(
+        res,
+        [],
+        "No expenses found. Create an expense to get started.",
+      );
+      return;
     }
 
     const categoryTotals = userExpenses.reduce(
@@ -51,20 +70,9 @@ export const getExpensesByCategories = asyncHandler(
   },
 );
 
-const getMonthString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-
-  return `${month}-${year}`;
-};
-
 export const getMonthlyTotals = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = "user123";
-
-    if (!userId) {
-      throw new AppError("User not authenticated. Please login.", 401);
-    }
+    const userId = req.userId;
 
     const year = req.query.year
       ? Number(req.query.year)
@@ -88,7 +96,8 @@ export const getMonthlyTotals = asyncHandler(
     });
 
     if (userExpenses.length === 0) {
-      return sendSuccess(res, [], `No expenses found for year ${year}`);
+      sendSuccess(res, [], `No expenses found for year ${year}`);
+      return;
     }
 
     const monthlyTotals = userExpenses.reduce(
@@ -127,24 +136,9 @@ export const getMonthlyTotals = asyncHandler(
   },
 );
 
-const getCurrentMonth = (): string => {
-  return getMonthString(new Date());
-};
-
-const getLastMonth = (): string => {
-  const date = new Date();
-  date.setMonth(date.getMonth() - 1);
-
-  return getMonthString(date);
-};
-
 export const getDashboardStats = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = "user123";
-
-    if (!userId) {
-      throw new AppError("User not authenticated. Please login.", 401);
-    }
+    const userId = req.userId;
 
     const userExpenses = fakeExpenses.filter((exp) => exp.userId === userId);
 
@@ -219,5 +213,47 @@ export const getDashboardStats = asyncHandler(
     };
 
     sendSuccess(res, stats, "Dashboard statistics retrieved.");
+  },
+);
+
+export const getSpendingTrends = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+
+    const userExpenses = fakeExpenses.filter((exp) => exp.userId === userId);
+
+    if (userExpenses.length === 0) {
+      sendSuccess(
+        res,
+        [],
+        "No expenses found. Create an expense to get started.",
+      );
+      return;
+    }
+
+    const trends = [];
+    const currentDate = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(currentDate.getMonth() - i);
+      const monthString = getMonthString(date);
+
+      const monthExpenses = userExpenses.filter(
+        (exp) => getMonthString(new Date(exp.date)) === monthString,
+      );
+      const monthTotal = monthExpenses.reduce(
+        (sum, exp) => sum + exp.amount,
+        0,
+      );
+
+      trends.push({
+        month: monthString,
+        total: Math.round(monthTotal * 100) / 100,
+        count: monthExpenses.length,
+      });
+    }
+
+    sendSuccess(res, trends, "Spending trends retrieved.");
   },
 );
