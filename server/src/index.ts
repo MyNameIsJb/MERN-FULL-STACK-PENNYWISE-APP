@@ -5,11 +5,19 @@ import profileRoutes from "./routes/profileRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 8000;
+
+const corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
