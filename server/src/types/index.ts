@@ -1,3 +1,5 @@
+import { Document } from "mongoose";
+
 export enum ExpenseCategory {
   FOOD = "food",
   TRANSPORT = "transport",
@@ -21,7 +23,15 @@ export interface Expense {
 }
 
 export interface User {
-  id: string;
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
