@@ -1,26 +1,27 @@
 import { NextFunction, Request, Response } from "express";
-import { ApiResponse, AuthResponse, User } from "../types";
+import { AuthResponse } from "../types";
 import { asyncHandler, sendSuccess } from "../utils/responseHelpers";
 import { AppError } from "../middleware/errorHandler";
+import User from "../models/User";
 
-export let fakeUsers: User[] = [
-  {
-    id: "user123",
-    name: "John Doe",
-    email: "john@example.com",
-    password: "password123",
-    createdAt: new Date("2025-12-01"),
-    updatedAt: new Date("2026-01-01"),
-  },
-  {
-    id: "user456",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    password: "password456",
-    createdAt: new Date("2025-12-01"),
-    updatedAt: new Date("2026-01-05"),
-  },
-];
+// export let fakeUsers: User[] = [
+//   {
+//     id: "user123",
+//     name: "John Doe",
+//     email: "john@example.com",
+//     password: "password123",
+//     createdAt: new Date("2025-12-01"),
+//     updatedAt: new Date("2026-01-01"),
+//   },
+//   {
+//     id: "user456",
+//     name: "Jane Smith",
+//     email: "jane@example.com",
+//     password: "password456",
+//     createdAt: new Date("2025-12-01"),
+//     updatedAt: new Date("2026-01-05"),
+//   },
+// ];
 
 export const signup = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -59,28 +60,27 @@ export const signup = asyncHandler(
       }
     }
 
-    const existingUser = fakeUsers.find((user) => user.email === email);
+    const existingUser = await User.findOne({ email: email });
 
     if (existingUser) {
-      throw new AppError("Email already registered", 400);
+      throw new AppError("Email already registerededededed", 400);
     }
 
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      email: email.toLowerCase(),
+    const newUser = new User({
+      name,
+      email,
       password,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    });
 
-    fakeUsers.push(newUser);
+    const savedUser = await newUser.save();
 
-    const { password: _, ...userWithoutPassword } = newUser;
+    const userObject = savedUser.toObject();
+
+    const { password: _, ...userWithoutPassword } = userObject;
 
     const authReponse: AuthResponse = {
-      user: userWithoutPassword,
-      token: "fake-jwt-token-" + newUser.id,
+      user: { ...userWithoutPassword, _id: savedUser._id.toString() },
+      token: "fake-jwt-token-" + savedUser._id,
     };
 
     sendSuccess(res, authReponse, "Account created successfully!", 201);
@@ -93,20 +93,21 @@ export const login = asyncHandler(
 
     if (!email || !password) {
       throw new AppError("Please provide email and password", 400);
-      8;
     }
 
-    const user = fakeUsers.find((user) => user.email === email);
+    const user = await User.findOne({ email: email });
 
-    if (!user || password !== user.password) {
+    if (!user) {
       throw new AppError("Invalid email or password", 401);
     }
 
-    const { password: _, ...userWithoutPassword } = user;
+    const userObject = user.toObject();
+
+    const { password: _, ...userWithoutPassword } = userObject;
 
     const authReponse: AuthResponse = {
-      user: userWithoutPassword,
-      token: "fake-jwt-token-" + user.id,
+      user: { ...userWithoutPassword, _id: user._id.toString() },
+      token: "fake-jwt-token-" + user._id,
     };
 
     sendSuccess(res, authReponse, "Log in successful!");

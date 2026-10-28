@@ -1,16 +1,22 @@
 import { NextFunction, Request, Response } from "express";
-import { ApiResponse, User } from "../types";
-import { fakeUsers } from "./authControllers";
+import { ApiResponse } from "../types";
 import { asyncHandler, sendSuccess } from "../utils/responseHelpers";
 import { AppError } from "../middleware/errorHandler";
+import User from "../models/User";
 
 export const getProfile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId;
 
-    const user = fakeUsers.find((user) => user.id === userId)!;
+    const user = await User.findOne({ _id: userId });
 
-    const { password: _, ...userWithoutPassword } = user;
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    const userObject = user.toObject();
+
+    const { password: _, ...userWithoutPassword } = userObject;
 
     sendSuccess(res, userWithoutPassword, "Profile retrieved successfully!");
   },
@@ -54,29 +60,40 @@ export const updateProfile = asyncHandler(
       }
     }
 
-    const userIndex = fakeUsers.findIndex((user) => user.id === userId);
+    const user = await User.findOne({ _id: userId });
 
-    if (userIndex === -1) {
+    if (!user) {
       throw new AppError("User not found", 404);
     }
 
-    if (email && email !== fakeUsers[userIndex].email) {
-      const emailExists = fakeUsers.find((user) => user.email === email);
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({
+        email: email,
+        _id: { $ne: userId },
+      });
 
       if (emailExists) {
         throw new AppError("Email already in use!", 400);
       }
     }
 
-    fakeUsers[userIndex] = {
-      ...fakeUsers[userIndex],
-      name: name || fakeUsers[userIndex].name,
-      email: email || fakeUsers[userIndex].email,
-      password: password || fakeUsers[userIndex].password,
-      updatedAt: new Date(),
-    };
+    if (name) {
+      user.name = name;
+    }
 
-    const { password: _, ...userWithoutPassword } = fakeUsers[userIndex];
+    if (email) {
+      user.email = email;
+    }
+
+    if (password) {
+      user.password = password;
+    }
+
+    const updatedUser = await user.save();
+
+    const userObject = updatedUser.toObject();
+
+    const { password: _, ...userWithoutPassword } = userObject;
 
     sendSuccess(res, userWithoutPassword, "Profile updated successfully!");
   },
