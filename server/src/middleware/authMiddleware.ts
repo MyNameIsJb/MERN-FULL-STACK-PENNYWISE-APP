@@ -14,7 +14,7 @@ export const requireAuth = (
   res: Response,
   next: NextFunction,
 ) => {
-  const userId = "user123";
+  const userId = "6ae2eaddb085b8fba46c5725";
 
   if (!userId) {
     throw new AppError("User not authenticated. Please login.", 401);

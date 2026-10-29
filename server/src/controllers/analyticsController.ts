@@ -3,6 +3,7 @@ import { asyncHandler, sendSuccess } from "../utils/responseHelpers";
 import { AppError } from "../middleware/errorHandler";
 import { fakeExpenses } from "./expenseControllers";
 import { DashboardStats, ExpenseCategory, MonthlyTotals } from "../types";
+import Expense from "../models/Expense";
 
 const getMonthString = (date: Date): string => {
   const year = date.getFullYear();
@@ -26,7 +27,9 @@ export const getExpensesByCategories = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId;
 
-    const userExpenses = fakeExpenses.filter((exp) => exp.userId === userId);
+    const userExpenses = await Expense.find({
+      userId,
+    });
 
     if (userExpenses.length === 0) {
       sendSuccess(
@@ -48,7 +51,7 @@ export const getExpensesByCategories = asyncHandler(
 
         return acc;
       },
-      {} as Record<ExpenseCategory, { total: number; count: number }>,
+      {} as Record<string, { total: number; count: number }>,
     );
 
     const grandTotal = Object.values(categoryTotals).reduce(
