@@ -93,9 +93,11 @@ export const getMonthlyTotals = asyncHandler(
       );
     }
 
-    const userExpenses = fakeExpenses.filter((exp) => {
+    const userExpenses = await Expense.find({ userId });
+
+    const yearExpenses = userExpenses.filter((exp) => {
       const expenseYear = new Date(exp.date).getFullYear();
-      return exp.userId === userId && expenseYear === year;
+      return expenseYear === year;
     });
 
     if (userExpenses.length === 0) {
@@ -143,7 +145,7 @@ export const getDashboardStats = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId;
 
-    const userExpenses = fakeExpenses.filter((exp) => exp.userId === userId);
+    const userExpenses = await Expense.find({ userId });
 
     if (userExpenses.length === 0) {
       sendSuccess(
@@ -223,7 +225,7 @@ export const getSpendingTrends = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId;
 
-    const userExpenses = fakeExpenses.filter((exp) => exp.userId === userId);
+    const userExpenses = await Expense.find({ userId });
 
     if (userExpenses.length === 0) {
       sendSuccess(
